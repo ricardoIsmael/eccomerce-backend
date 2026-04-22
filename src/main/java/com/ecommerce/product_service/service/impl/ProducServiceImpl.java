@@ -9,12 +9,14 @@ import com.ecommerce.product_service.model.Product;
 import com.ecommerce.product_service.repository.ProductoRepository;
 import com.ecommerce.product_service.service.ProductService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ProducServiceImpl implements ProductService {
 
     private final ProductoRepository productoRepository;
@@ -24,6 +26,7 @@ public class ProducServiceImpl implements ProductService {
     public ProductResponseDTO creatProduct(ProductoRequestDTO requestDTO) {
         Product product = productoMapper.toProduct(requestDTO); //nosotros recibimos un requeset mapeamos ese producto
         Product savedProducto = productoRepository.save(product);//guardamos ese pruducto
+        log.info("Producto {} guardado",savedProducto.getName());
         return productoMapper.toProductResponseDTO(savedProducto);//y lo tranformamos en un response
     }
 
@@ -52,6 +55,7 @@ public class ProducServiceImpl implements ProductService {
         //forma tradicional product.setNombre(productoRequestDTO.name());
         productoMapper.updateProductFromRequest(productoRequestDTO,product);
         Product updateProduct = productoRepository.save(product);
+        log.info("Producto {} actulizado",updateProduct.getName());
         return  productoMapper.toProductResponseDTO(updateProduct);
     }
 
@@ -60,6 +64,7 @@ public class ProducServiceImpl implements ProductService {
         if(!productoRepository.existsById(id))
             throw new ResourceNotFoundException("Producto","id",id);
         productoRepository.deleteById(id);
+        log.info("Producto con el id:{} fue eliminado",id);
     }
 }
 
