@@ -5,6 +5,7 @@ import com.ecommerce.inventory_service.dto.InventoryResponseDTO;
 import com.ecommerce.inventory_service.model.Inventory;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
 public interface InventoryMapper
@@ -13,4 +14,5 @@ public interface InventoryMapper
     //campo calculo o de convenencia (target)
     @Mapping(target = "inStock", expression = "java(inventory.getQuantity()>0)") //si llego a tener este campo mayot q  0 lo pondra en true sino a false
     InventoryResponseDTO toInventoryResponse(Inventory inventory);
+    void updateInventoryFromRequest(InventoryRequestDTO inventoryRequestDTO,@MappingTarget Inventory inventory);
 }

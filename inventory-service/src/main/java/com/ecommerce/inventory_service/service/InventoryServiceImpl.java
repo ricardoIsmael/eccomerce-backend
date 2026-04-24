@@ -2,6 +2,7 @@ package com.ecommerce.inventory_service.service;
 
 import com.ecommerce.inventory_service.dto.InventoryRequestDTO;
 import com.ecommerce.inventory_service.dto.InventoryResponseDTO;
+import com.ecommerce.inventory_service.exception.ResourceNotFoundException;
 import com.ecommerce.inventory_service.mapper.InventoryMapper;
 import com.ecommerce.inventory_service.model.Inventory;
 import com.ecommerce.inventory_service.repository.InventoryRepository;
@@ -40,17 +41,31 @@ public class InventoryServiceImpl implements  InventoryService
     }
 
     @Override
+    @Transactional(readOnly = true)//cuando es solo lectura podeer readOnly en true
     public List<InventoryResponseDTO> getAllInventory() {
-        return List.of();
+        return inventoryRepository.findAll()
+                .stream()
+                .map(inventoryMapper::toInventoryResponse)
+                .toList();
     }
 
     @Override
+    @Transactional
     public InventoryResponseDTO updateInventory(Long id, InventoryRequestDTO inventoryRequest) {
-        return null;
+        Inventory inventory = inventoryRepository.findById(id).orElseThrow(
+                ()-> new ResourceNotFoundException("Inventory","id",id)
+        );
+        inventoryMapper.updateInventoryFromRequest(inventoryRequest,inventory);
+        Inventory inventoryUpdate = inventoryRepository.save(inventory);
+        log.info("Inventario {} actulizado",inventoryUpdate.getSku());
+        return inventoryMapper.toInventoryResponse(inventoryUpdate);
     }
 
     @Override
+    @Transactional
     public void deleteInventory(Long id) {
-
+        if(!inventoryRepository.existsById(id))
+            throw new ResourceNotFoundException("El id del inventario no existe","id",id);
+        inventoryRepository.deleteById(id);
     }
 }
