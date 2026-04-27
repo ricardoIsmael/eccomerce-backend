@@ -31,7 +31,7 @@ public class InventoryServiceImpl implements  InventoryService
     @Override
     @Transactional
     public InventoryResponseDTO createInventory(InventoryRequestDTO inventoryRequest) {
-        boolean exists = inventoryRepository.existBySku(inventoryRequest.getSku());
+        boolean exists = inventoryRepository.existsBySku(inventoryRequest.getSku());
         if(exists)
             throw new RuntimeException("El inventario para el sku " + inventoryRequest.getSku() + " ya existe");
         Inventory inventory = inventoryMapper.toInventory(inventoryRequest);//
@@ -68,4 +68,21 @@ public class InventoryServiceImpl implements  InventoryService
             throw new ResourceNotFoundException("El id del inventario no existe","id",id);
         inventoryRepository.deleteById(id);
     }
+
+    @Override
+    @Transactional
+    public void reduceStock(String sku, Integer quantity) {
+        var inventory = inventoryRepository.findBySku(sku)
+                .orElseThrow(
+                        ()-> new RuntimeException("Producto no encontrado" + sku)
+                );
+        if(inventory.getQuantity()< quantity)
+            throw new RuntimeException("Stock insuficiente para: " +sku);
+
+        inventory.setQuantity(inventory.getQuantity()-quantity);
+        inventoryRepository.save(inventory);
+    }
+    //comand query separacion, siempre separa metoods en 2 tipos query son preguntas devuelven datos no cambian,los comand cambias datos pero no devulven nd
+    //solo es ejecutar accion,
+    //netonao necisito conocer que pasa,
 }
