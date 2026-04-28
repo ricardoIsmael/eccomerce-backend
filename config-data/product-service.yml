@@ -1,0 +1,19 @@
+spring:
+  threads:
+    virtual:
+      enabled: true
+  data:
+    mongodb:
+      # Sintaxis: ${NOMBRE_VAR_ENTORNO : VALOR_POR_DEFECTO}
+      host: localhost
+      port: :27018
+      database: product-db
+      username: root
+      password: password
+      authentication-database: admin
+
+server:
+  port: 8080
+  error:
+    include-message: always #configurar que se aplica y que siempre este en el json sin importar si el error lo generamos nostros o el frontend
+    include-stacktrace: never #prohibe que se vea la traza de la pila en la resp json

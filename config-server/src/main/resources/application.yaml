@@ -8,6 +8,9 @@ spring:
           # 1. La URI debe ser estrictamente la ruta raíz del repositorio (la que termina en .git)
           uri: https://github.com/ricardoIsmael/eccomerce-backend.git
 
+          username: ${GITHUB_USER}
+          password: ${GITHUB_TOKEM}
+
           # 2. Le decimos a Spring en qué rama buscar
           default-label: master
 
