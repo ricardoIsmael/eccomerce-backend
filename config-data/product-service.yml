@@ -6,7 +6,7 @@ spring:
     mongodb:
       # Sintaxis: ${NOMBRE_VAR_ENTORNO : VALOR_POR_DEFECTO}
       host: localhost
-      port: :27018
+      port: :27017
       database: product-db
       username: root
       password: password
