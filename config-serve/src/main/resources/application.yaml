@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: config-serve
+  cloud:
+    config:
+      server:
+        git:
+          uri: file:///C:/Users/panc1/Documentos/Integrador/microservices-ecommerce/config-data
+          clone-on-start: true
+          default-label: master
+server:
+  port: 8888

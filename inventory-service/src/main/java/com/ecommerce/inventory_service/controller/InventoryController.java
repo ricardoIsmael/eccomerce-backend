@@ -39,11 +39,11 @@ public class InventoryController
     public  InventoryResponseDTO updateInventory(@PathVariable Long id, @RequestBody InventoryRequestDTO inventoryRequestDTO){
         return inventoryService.updateInventory(id, inventoryRequestDTO);
     }
-    @PutMapping("/reduce")
+    @PutMapping("/reduce/{sku}")
     @ResponseStatus(HttpStatus.OK)
-    public String reduceStock(@PathVariable String sku, @RequestParam Integer quantity){
+    public Boolean reduceStock(@PathVariable String sku, @RequestParam Integer quantity){
         inventoryService.reduceStock(sku,quantity);
-        return "Stock reducido existosamente";
+        return true;
     }
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)

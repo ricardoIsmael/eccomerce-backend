@@ -7,6 +7,7 @@ import com.ecommerce.order_service.mapper.OrderMapper;
 import com.ecommerce.order_service.models.Order;
 import com.ecommerce.order_service.repository.OrderRepository;
 import com.ecommerce.order_service.service.OrderService;
+import com.ecommerce.order_service.service.client.InventoryClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.weaver.ast.Or;
@@ -23,7 +24,8 @@ import java.util.UUID;
 public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
-    private final WebClient.Builder webClientBuilder;
+    //private final WebClient.Builder webClientBuilder;
+    private final InventoryClient inventoryClient;
 
     @Override
     @Transactional
@@ -32,15 +34,21 @@ public class OrderServiceImpl implements OrderService {
         for (var item: order.getOrderLineItemsList()){
             String sku = item.getSku();
             Integer quantity = item.getQuantity();
+            try{
+               /* Boolean inStock = webClientBuilder.build().put()
+                        .uri("http://localhost:8082/api/v1/inventory/reduce/" + sku,
+                                uriBuilder -> uriBuilder.queryParam("quantity",quantity).build())
+                        .retrieve()
+                        .bodyToMono(Boolean.class)
+                        .block();*/
+                inventoryClient.reduceStock(sku,quantity);
+            }catch (Exception e){
+                log.error("Error al reducir stock para el pruducto{}:{}",sku,e.getMessage());
+                throw new IllegalArgumentException("No se pudo procesar la ordern: Stock insufeciente o "  +
+                        "Eror de inentario");
+            }
 
-            Boolean inStock = webClientBuilder.build().get()
-                    .uri("http://localhost:8082/api/v1/inventory/" + sku,
-                            uriBuilder -> uriBuilder.queryParam("quantity",quantity).build())
-                    .retrieve()
-                    .bodyToMono(Boolean.class)
-                    .block();
-            if(!Boolean.TRUE.equals(inStock))
-                throw new IllegalArgumentException("No hay stock dosponible para el producto"+ sku);
+
         }
         order.setOrderNumber(UUID.randomUUID().toString());
         Order newOrder = orderRepository.save(order);
