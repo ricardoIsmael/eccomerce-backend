@@ -11,9 +11,18 @@ spring:
       username: root
       password: password
       authentication-database: admin
+app:
+  maintenance:
+    message: "Sistema operativo- Version 1.0"
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "refresh, health"
 server:
   port: 8080
   error:
     include-message: always #configurar que se aplica y que siempre este en el json sin importar si el error lo generamos nostros o el frontend
     include-stacktrace: never #prohibe que se vea la traza de la pila en la resp json
+
