@@ -18,3 +18,10 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
+order:
+  enabled: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "refresh, health"
