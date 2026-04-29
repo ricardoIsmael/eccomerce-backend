@@ -11,6 +11,8 @@ import com.ecommerce.order_service.service.client.InventoryClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.weaver.ast.Or;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -21,15 +23,25 @@ import java.util.UUID;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@RefreshScope
 public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
     //private final WebClient.Builder webClientBuilder;
     private final InventoryClient inventoryClient;
 
+    @Value("${order.enabled:true}")
+    private boolean orderEnabled;
+
     @Override
     @Transactional
     public OrderResponse createOrder(OrderRequest orderRequest) {
+
+        if(!orderEnabled) {
+            log.warn("Order rechazado :Servicio desabilitado por configuracion");
+            throw new RuntimeException("El servicio de pedidos esta actualmente en mantenimiento intente mas tarde");
+        }
+
         Order order = orderMapper.toOrder(orderRequest);
         for (var item: order.getOrderLineItemsList()){
             String sku = item.getSku();

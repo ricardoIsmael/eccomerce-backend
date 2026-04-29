@@ -11,6 +11,10 @@ spring:
       username: root
       password: password
       authentication-database: admin
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
 app:
   maintenance:
     message: "Sistema operativo- Version 1.0"
