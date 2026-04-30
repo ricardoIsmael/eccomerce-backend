@@ -7,9 +7,46 @@ eureka:
 spring:
   security:
     oauth2:
+      # 1. Configuración de CLIENTE (Necesaria para TokenRelay)
+      client:
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:9090/realms/ecommerce-realm
+        registration:
+          api-gateway-client:
+            provider: keycloak
+            client-id: api-gateway-client
+            client-secret: ${SECRET}
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/keycloak"
+            scope: openid
       resourceserver:
         jwt:
           issuer-uri: http://localhost:9090/realms/ecommerce-realm
+    cloud:
+      gateway:
+        # 3. Filtro Global: Pasa el token a TODOS los microservicios
+        default-filters:
+          - TokenRelay
+
+        routes:
+          # Ruta a Microservicio de Productos
+          - id: product-service
+            uri: lb://product-service
+            predicates:
+              - Path=/api/v1/product/**
+
+          # Ruta a Microservicio de Órdenes
+          - id: order-service
+            uri: lb://order-service
+            predicates:
+              - Path=/api/v1/order/**
+
+          # Ruta a Microservicio de Inventario
+          - id: inventory-service
+            uri: lb://inventory-service
+            predicates:
+              - Path=/api/v1/inventory/**
 
 server:
   port: 9000
