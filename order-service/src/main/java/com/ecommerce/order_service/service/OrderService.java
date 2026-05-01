@@ -7,8 +7,9 @@ import java.util.List;
 
 public interface OrderService
 {
-    OrderResponse createOrder(OrderRequest orderRequest);
-    List<OrderResponse> getAllOrder();
+    OrderResponse createOrder(OrderRequest orderRequest,String userId);
+    //List<OrderResponse> getAllOrder();
+    List<OrderResponse> getOrder(String userId, boolean isAdmin);
     OrderResponse getOrderById(Long id);
     void deleteOrder(Long id);
 }

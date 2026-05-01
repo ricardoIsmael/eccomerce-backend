@@ -35,14 +35,14 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public OrderResponse createOrder(OrderRequest orderRequest) {
-
+    public OrderResponse createOrder(OrderRequest orderRequest,String userId) {
         if(!orderEnabled) {
             log.warn("Order rechazado :Servicio desabilitado por configuracion");
             throw new RuntimeException("El servicio de pedidos esta actualmente en mantenimiento intente mas tarde");
         }
 
         Order order = orderMapper.toOrder(orderRequest);
+        order.setUserId(userId);
         for (var item: order.getOrderLineItemsList()){
             String sku = item.getSku();
             Integer quantity = item.getQuantity();
@@ -70,12 +70,26 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<OrderResponse> getOrder(String userId, boolean isAdmin) {
+        List<Order> orders;
+        if(isAdmin)
+            orders = orderRepository.findAll();
+        else
+            orders = orderRepository.findByUserId(userId);
+
+        return orders.stream()
+                .map(orderMapper::toOrderResponse)
+                .toList();
+    }
+
+   /* @Override
+    @Transactional(readOnly = true)
     public List<OrderResponse> getAllOrder() {
         return orderRepository.findAll()
                 .stream()
                 .map(orderMapper::toOrderResponse)
                 .toList();
-    }
+    }*/
 
     @Override
     @Transactional(readOnly = true)

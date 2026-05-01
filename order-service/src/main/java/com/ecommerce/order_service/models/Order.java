@@ -28,6 +28,8 @@ public class Order
      * 3. @JoinColumn: Le indica a la BD que cree la llave foránea 'order_id'
      * directamente en la tabla de los ítems.
      */
+    private String userId;
+
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true) // orphanRemoval es clave para Updates
     @JoinColumn(name = "order_id") // Crea la FK en la tabla de items
     private List<OrderLineItems> orderLineItemsList;
