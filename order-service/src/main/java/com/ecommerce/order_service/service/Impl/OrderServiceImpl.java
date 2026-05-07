@@ -1,7 +1,9 @@
 package com.ecommerce.order_service.service.Impl;
 
+import com.ecommerce.order_service.config.RabbitMQConfig;
 import com.ecommerce.order_service.dto.OrderRequest;
 import com.ecommerce.order_service.dto.OrderResponse;
+import com.ecommerce.order_service.event.OrderPlacedEvent;
 import com.ecommerce.order_service.exception.ResourceNotFoundException;
 import com.ecommerce.order_service.mapper.OrderMapper;
 import com.ecommerce.order_service.models.Order;
@@ -11,6 +13,7 @@ import com.ecommerce.order_service.service.client.InventoryClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.weaver.ast.Or;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Service;
@@ -28,10 +31,15 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
     //private final WebClient.Builder webClientBuilder;
-    private final InventoryClient inventoryClient;
+    // private final InventoryClient inventoryClient;
+    private final RabbitTemplate rabbitTemplate;
+
 
     @Value("${order.enabled:true}")
     private boolean orderEnabled;
+
+
+
 
     @Override
     @Transactional
@@ -43,28 +51,39 @@ public class OrderServiceImpl implements OrderService {
 
         Order order = orderMapper.toOrder(orderRequest);
         order.setUserId(userId);
-        for (var item: order.getOrderLineItemsList()){
-            String sku = item.getSku();
-            Integer quantity = item.getQuantity();
-            try{
-               /* Boolean inStock = webClientBuilder.build().put()
-                        .uri("http://localhost:8082/api/v1/inventory/reduce/" + sku,
-                                uriBuilder -> uriBuilder.queryParam("quantity",quantity).build())
-                        .retrieve()
-                        .bodyToMono(Boolean.class)
-                        .block();*/
-                inventoryClient.reduceStock(sku,quantity);
-            }catch (Exception e){
-                log.error("Error al reducir stock para el pruducto{}:{}",sku,e.getMessage());
-                throw new IllegalArgumentException("No se pudo procesar la ordern: Stock insufeciente o "  +
-                        "Eror de inentario");
-            }
-
-
-        }
+//        for (var item: order.getOrderLineItemsList()){
+//            String sku = item.getSku();
+//            Integer quantity = item.getQuantity();
+//            try{
+//               /* Boolean inStock = webClientBuilder.build().put()
+//                        .uri("http://localhost:8082/api/v1/inventory/reduce/" + sku,
+//                                uriBuilder -> uriBuilder.queryParam("quantity",quantity).build())
+//                        .retrieve()
+//                        .bodyToMono(Boolean.class)
+//                        .block();*/
+//                inventoryClient.reduceStock(sku,quantity);
+//            }catch (Exception e){
+//                log.error("Error al reducir stock para el pruducto{}:{}",sku,e.getMessage());
+//                throw new IllegalArgumentException("No se pudo procesar la ordern: Stock insufeciente o "  +
+//                        "Eror de inentario");
+//            }
+//
+//
+//        }
         order.setOrderNumber(UUID.randomUUID().toString());
         Order newOrder = orderRepository.save(order);
         log.info("orden guardad con exito. Id: {}",newOrder.getId());
+        List<OrderPlacedEvent.OrderItemsEvenet> orderItemsEvenets =
+                order.getOrderLineItemsList().stream()
+                        .map(item -> new OrderPlacedEvent.OrderItemsEvenet(
+                                item.getSku(),item.getPrice().toString(),item.getQuantity()
+                        )).toList();
+
+        OrderPlacedEvent event = new OrderPlacedEvent(
+                newOrder.getOrderNumber(), orderRequest.getEmail(), orderItemsEvenets
+        );
+        rabbitTemplate.convertAndSend("order-events","order.placed",event);
+        log.info("Evento enviado a rabbitmq para la orden: {}", newOrder.getOrderNumber());
         return orderMapper.toOrderResponse(newOrder);
     }
 
